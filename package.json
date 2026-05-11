@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "start": "python3 -m DAXXMUSIC"
+    "start": "python -m DAXXMUSIC"
   }
 }

@@ -31,7 +31,6 @@ MISHI = [
     "https://graph.org/file/d6360613d0fa7a9d2f90b.jpg",
     "https://graph.org/file/37248e7bdff70c662a702.jpg",
     "https://graph.org/file/0bfe29d15e918917d1305.jpg",
-    "https://graph.org/file/16b1a2828cc507f8048bd.jpg",
     "https://graph.org/file/e6b01f23f2871e128dad8.jpg",
     "https://graph.org/file/cacbdddee77784d9ed2b7.jpg",
     "https://graph.org/file/ddc5d6ec1c33276507b19.jpg",

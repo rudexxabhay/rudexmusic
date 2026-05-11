@@ -176,6 +176,10 @@ You can also use the npm wrapper:
 npm start
 ```
 
+## Python Compatibility
+
+This project currently keeps the Pyrogram 2.x and PyTgCalls stack because it matches the existing music playback code. Python 3.11 is enforced through `runtime.txt` and `render.yaml`. Do not deploy with Python 3.14 unless the Telegram client and voice-call layer are migrated and tested together.
+
 ## Render Deployment
 
 Use a Render Web Service. The bot starts a small health endpoint on `PORT` so Render can keep the service alive.

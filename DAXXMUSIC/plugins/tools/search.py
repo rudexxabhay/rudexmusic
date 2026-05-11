@@ -1,200 +1,80 @@
-from traceback import format_exc
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from search_engine_parser.core.engines.google import Search as GoogleSearch
-from search_engine_parser.core.engines.stackoverflow import \
-    Search as StackSearch
-from search_engine_parser.core.exceptions import NoResultsFound, NoResultsOrTrafficError
-from DAXXMUSIC import app
+from html import unescape
+from urllib.parse import quote_plus
+
+import aiohttp
 from pyrogram import filters
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+
+from DAXXMUSIC import app
 
 
+def _search_keyboard(results):
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton(title[:64] or "Open result", url=url)]
+            for title, url in results[:5]
+            if url
+        ]
+    )
 
 
-gsearch = GoogleSearch()
-stsearch = StackSearch()
-
-
-
-def ikb(rows=None, back=False, todo="start_back"):
-    """
-    rows = pass the rows
-    back - if want to make back button
-    todo - callback data of back button
-    """
-    if rows is None:
-        rows = []
-    lines = []
-    try:
-        for row in rows:
-            line = []
-            for button in row:
-                btn_text = button.split(".")[1].capitalize()
-                button = btn(btn_text, button)  
-                line.append(button)
-            lines.append(line)
-    except AttributeError:
-        for row in rows:
-            line = []
-            for button in row:
-                button = btn(*button)  
-                line.append(button)
-            lines.append(line)
-    except TypeError:
-        # make a code to handel that error
-        line = []
-        for button in rows:
-            button = btn(*button)  # InlineKeyboardButton
-            line.append(button)
-        lines.append(line)
-    if back: 
-        back_btn = [(btn("ʙᴀᴄᴋ", todo))]
-        lines.append(back_btn)
-    return InlineKeyboardMarkup(inline_keyboard=lines)
-
-
-def btn(text, value, type="callback_data"):
-    return InlineKeyboardButton(text, **{type: value})
-
-
-
-
-
-
-@app.on_message(filters.command('google'))
-async def search_(app: app, msg: Message):
+@app.on_message(filters.command("google"))
+async def search_(_, msg: Message):
     split = msg.text.split(None, 1)
     if len(split) == 1:
-        return await msg.reply_text("**ɢɪᴠᴇ ǫᴜᴇʀʏ ᴛᴏ sᴇᴀʀᴄʜ\n│ \n└➻ ᴍᴀᴅᴇ ʙʏ Abhay**")
-    to_del = await msg.reply_text("**sᴇᴀʀᴄʜɪɴɢ ᴏɴ ɢᴏᴏɢʟᴇ...\n│ \n└➻ ᴍᴀᴅᴇ ʙʏ Abhay**")
-    query = split[1]
-    try:
-        result = await gsearch.async_search(query)
-        keyboard = ikb(
-            [
-                [
-                    (
-                        f"{result[0]['titles']}",
-                        f"{result[0]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[1]['titles']}",
-                        f"{result[1]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[2]['titles']}",
-                        f"{result[2]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[3]['titles']}",
-                        f"{result[3]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[4]['titles']}",
-                        f"{result[4]['links']}",
-                        "url",
-                    ),
-                ],
-            ]
-        )
+        return await msg.reply_text("**Give a query to search.**")
 
-        txt = f"**ʜᴇʀᴇ ᴀʀᴇ ᴛʜᴇ ʀᴇsᴜʟᴛs ᴏғ ʀǫᴜᴇsᴛᴇᴅ : {query.title()}**"
-        await to_del.delete()
-        await msg.reply_text(txt, reply_markup=keyboard)
-        return
-    except NoResultsFound:
-        await to_del.delete()
-        await msg.reply_text("**ɴᴏ ʀᴇsᴜʟᴛ ғᴏᴜɴᴅ ᴄᴏʀʀᴇsᴘᴏɴᴅɪɴɢ ᴛᴏ ʏᴏᴜʀ ǫᴜᴇʀʏ\n│ \n└➻ ᴍᴀᴅᴇ ʙʏ Abhay**")
-        return
-    except NoResultsOrTrafficError:
-        await to_del.delete()
-        await msg.reply_text("****ɴᴏ ʀᴇsᴜʟᴛ ғᴏᴜɴᴅ ᴅᴜᴇ ᴛᴏ ᴛᴏᴏ ᴍᴀɴʏ ᴛʀᴀғғɪᴄ\n│ \n└➻ ᴍᴀᴅᴇ ʙʏ Abhay**")
-        return
-    except Exception as e:
-        await to_del.delete()
-        await msg.reply_text("**sᴏᴍᴇᴛʜɪɴɢ ᴡᴇɴᴛ ᴡʀᴏɴɢ. ᴘʟᴇᴀsᴇ ʀᴇᴘᴏʀᴛ ɪᴛ ɪɴ ᴛʜᴇ sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ.**")
-        print(f"error : {e}")
-        return
+    query = split[1].strip()
+    url = f"https://www.google.com/search?q={quote_plus(query)}"
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Open Google results", url=url)]]
+    )
+    await msg.reply_text(
+        f"**Search results for:** `{query}`",
+        reply_markup=keyboard,
+        disable_web_page_preview=True,
+    )
 
 
-
-@app.on_message(filters.command('stack'))
-async def stack_search_(app: app, msg: Message):
+@app.on_message(filters.command("stack"))
+async def stack_search_(_, msg: Message):
     split = msg.text.split(None, 1)
     if len(split) == 1:
-        return await msg.reply_text("**ɢɪᴠᴇ ǫᴜᴇʀʏ ᴛᴏ sᴇᴀʀᴄʜ\n│ \n└➻ ᴍᴀᴅᴇ ʙʏ Abhay**")
-    to_del = await msg.reply_text("**sᴇᴀʀᴄʜɪɴɢ ᴏɴ ɢᴏᴏɢʟᴇ...\n│ \n└➻ ᴍᴀᴅᴇ ʙʏ Abhay**")
-    query = split[1]
+        return await msg.reply_text("**Give a query to search.**")
+
+    query = split[1].strip()
+    status = await msg.reply_text("**Searching Stack Overflow...**")
+    params = {
+        "order": "desc",
+        "sort": "relevance",
+        "q": query,
+        "site": "stackoverflow",
+    }
+
     try:
-        result = await stsearch.async_search(query)
-        keyboard = ikb(
-            [
-                [
-                    (
-                        f"{result[0]['titles']}",
-                        f"{result[0]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[1]['titles']}",
-                        f"{result[1]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[2]['titles']}",
-                        f"{result[2]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[3]['titles']}",
-                        f"{result[3]['links']}",
-                        "url",
-                    ),
-                ],
-                [
-                    (
-                        f"{result[4]['titles']}",
-                        f"{result[4]['links']}",
-                        "url",
-                    ),
-                ],
-            ]
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://api.stackexchange.com/2.3/search/advanced",
+                params=params,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as response:
+                data = await response.json()
+
+        results = [
+            (unescape(item.get("title", "Stack Overflow result")), item.get("link"))
+            for item in data.get("items", [])
+        ]
+        if not results:
+            await status.delete()
+            return await msg.reply_text("**No Stack Overflow results found.**")
+
+        await status.delete()
+        await msg.reply_text(
+            f"**Stack Overflow results for:** `{query}`",
+            reply_markup=_search_keyboard(results),
+            disable_web_page_preview=True,
         )
-
-        txt = f"**ʜᴇʀᴇ ᴀʀᴇ ᴛʜᴇ ʀᴇsᴜʟᴛs ᴏғ ʀǫᴜᴇsᴛᴇᴅ : {query.title()}**"
-        await to_del.delete()
-        await msg.reply_text(txt, reply_markup=keyboard)
-        return
-    except NoResultsFound:
-        await to_del.delete()
-        await msg.reply_text("**ɴᴏ ʀᴇsᴜʟᴛ ғᴏᴜɴᴅ ᴄᴏʀʀᴇsᴘᴏɴᴅɪɴɢ ᴛᴏ ʏᴏᴜʀ ǫᴜᴇʀʏ**")
-        return
-    except NoResultsOrTrafficError:
-        await to_del.delete()
-        await msg.reply_text("****ɴᴏ ʀᴇsᴜʟᴛ ғᴏᴜɴᴅ ᴅᴜᴇ ᴛᴏ ᴛᴏᴏ ᴍᴀɴʏ ᴛʀᴀғғɪᴄ**")
-        return
-    except Exception as e:
-        await to_del.delete()
-        await msg.reply_text("**sᴏᴍᴇᴛʜɪɴɢ ᴡᴇɴᴛ ᴡʀᴏɴɢ. ᴘʟᴇᴀsᴇ ʀᴇᴘᴏʀᴛ ɪᴛ ɪɴ ᴛʜᴇ sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ.**")
-        print(f"error : {e}")
-        return
-
-
-
+    except Exception as exc:
+        await status.delete()
+        await msg.reply_text("**Search failed. Please try again later.**")
+        print(f"stack search error: {exc}")
