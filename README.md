@@ -143,7 +143,7 @@ Notes:
 
 ## Local Setup
 
-1. Install Python 3.11 and `ffmpeg`. Python 3.11 is recommended for local testing. Python 3.12 can be used for dependency installation with `Pillow>=10.4.0`, but Python 3.11 is still the safest choice for Telegram voice-call packages.
+1. Install Python 3.11 and `ffmpeg`. Python 3.11 is required for this project. Do not use Python 3.14; Pyrogram 2.x and Telegram voice-call packages are not compatible with it.
 2. Create and activate a virtual environment.
 3. Install dependencies.
 4. Create `.env` from `.env.example`.
@@ -183,7 +183,7 @@ Use a Render Web Service. The bot starts a small health endpoint on `PORT` so Re
 1. Push this project to GitHub.
 2. Create a new Web Service on Render.
 3. Connect the GitHub repository.
-4. Select Python environment.
+4. Select Python environment and use Python 3.11.
 5. Set the build command:
 
 ```bash
@@ -241,6 +241,8 @@ Install packages:
 sudo apt update
 sudo apt install python3 python3-pip python3-venv ffmpeg git -y
 ```
+
+Use Python 3.11 on the VPS. Do not deploy this bot with Python 3.14.
 
 Clone the project:
 
@@ -321,7 +323,7 @@ Natural language moderation also supports ban, unban, mute, unmute, kick/remove,
 - Music does not start: start a voice chat in the group/channel and make sure the assistant account can join.
 - `ffmpeg` errors: install `ffmpeg` locally or use the Dockerfile.
 - Pillow install errors on Windows, such as `Failed to build 'pillow'` or `KeyError: '__version__'`: run `pip install --only-binary=:all: "Pillow>=10.4.0"` and then run `pip install -r requirements.txt` again.
-- `py-tgcalls` install errors: use Python 3.10 or 3.11, recreate `.venv`, then run `pip install -r requirements.txt` again.
+- `py-tgcalls` or Pyrogram event loop errors: use Python 3.11, not Python 3.14. Recreate `.venv`, then run `pip install -r requirements.txt` again.
 - MongoDB errors: verify `MONGO_DB_URI`.
 - Render deploy fails: use a Web Service, keep start command as `python -m DAXXMUSIC`, and make sure all env variables are set.
 - Commands do not work for sudo users: verify `OWNER_ID` and comma-separated `SUDO_USERS` are numeric Telegram user IDs.
